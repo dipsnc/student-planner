@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo">🎓</span>
+        <h1>Student Planner</h1>
+      </div>
+      <button
+        class="nav-toggle"
+        id="nav-toggle"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span class="icon-burger">☰</span>
+        <span class="icon-close">✕</span>
+      </button>
+      <nav class="navbar" id="navbar">
+        <button class="nav-link" data-route="#home">Home</button>
+        <button class="nav-link" data-route="#todo">To-Do</button>
+        <button class="nav-link" data-route="#pomodoro">Pomodoro</button>
+        <button class="nav-link" data-route="#timetable">Timetable</button>
+        <button
+          class="nav-link"
+          id="nav-auth"
+          data-route="#auth"
+          style="margin-left: 8px"
+        >
+          Login
+        </button>
+      </nav>
+    </header>
+
+    <main id="app">
+      <!-- Hero / Home Page -->
+      <section id="view-home" class="view hidden full-height">
+        <div class="hero">
+          <div class="hero-content">
+            <h1 class="hero-title">Plan smarter. Study happier.</h1>
+            <p>
+              All-in-one student planner: tasks, reminders, pomodoro focus, and
+              a weekly timetable.
+            </p>
+            <div class="hero-actions">
+              <button class="btn primary" id="cta-get-started">
+                Get Started
+              </button>
+            </div>
+            <div class="hero-cards">
+              <div class="hero-card">
+                <div>⚡ Quick capture</div>
+                <small>Add tasks with reminders in seconds.</small>
+              </div>
+              <div class="hero-card">
+                <div>⏱️ Focus sessions</div>
+                <small>Pomodoro with streak tracking.</small>
+              </div>
+              <div class="hero-card">
+                <div>📅 Weekly planner</div>
+                <small>Drag-and-drop your classes and events.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- To-Do / Reminder Page -->
+      <section id="view-todo" class="view">
+        <div class="panel">
+          <h2>To-Do & Reminders</h2>
+          <form id="todo-form" class="row gap">
+            <input
+              type="text"
+              id="todo-title"
+              placeholder="New task..."
+              required
+            />
+            <input type="datetime-local" id="todo-due" />
+            <label class="checkbox">
+              <input type="checkbox" id="todo-reminder" />
+              <span>Reminder</span>
+            </label>
+            <button type="submit" class="btn primary">Add</button>
+          </form>
+          <div class="list-header">
+            <div>Task</div>
+            <div>Due</div>
+            <div>Status</div>
+            <div>Actions</div>
+          </div>
+          <ul id="todo-list" class="todo-list"></ul>
+        </div>
+      </section>
+
+      <!-- Auth Page -->
+      <section id="view-auth" class="view hidden full-height">
+        <div class="panel auth">
+          <h2 class="auth-title">Log in to explore more</h2>
+          <div class="auth-tabs">
+            <button class="chip" data-authtab="login">Login</button>
+            <button class="chip" data-authtab="signup">Sign Up</button>
+          </div>
+          <form id="form-login" class="auth-form">
+            <input type="email" id="login-email" placeholder="Email" required />
+            <input
+              type="password"
+              id="login-password"
+              placeholder="Password"
+              required
+            />
+            <button type="submit" class="btn primary">Login</button>
+          </form>
+          <form id="form-signup" class="auth-form hidden">
+            <input
+              type="text"
+              id="signup-name"
+              placeholder="Full name"
+              required
+            />
+            <input
+              type="email"
+              id="signup-email"
+              placeholder="Email"
+              required
+            />
+            <input
+              type="password"
+              id="signup-password"
+              placeholder="Password"
+              required
+            />
+            <button type="submit" class="btn primary">Create account</button>
+          </form>
+          <div class="auth-hint">No real auth yet. We use mock local data.</div>
+        </div>
+      </section>
+
+      <!-- Pomodoro Page -->
+      <section id="view-pomodoro" class="view hidden">
+        <div class="panel">
+          <h2>Pomodoro</h2>
+          <div class="session-types">
+            <button class="chip" data-session="focus">Focus</button>
+            <button class="chip" data-session="short">Short Break</button>
+            <button class="chip" data-session="long">Long Break</button>
+          </div>
+          <div class="timer">
+            <div id="timer-display" class="timer-display">25:00</div>
+            <div class="controls">
+              <button id="timer-start" class="btn primary">Start</button>
+              <button id="timer-pause" class="btn">Pause</button>
+              <button id="timer-reset" class="btn">Reset</button>
+              <button id="timer-complete" class="btn accent">Complete</button>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <span id="sessions-today">0</span><label>Sessions Today</label>
+            </div>
+            <div class="stat">
+              <span id="streak-days">0</span><label>Daily Streak</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timetable / Weekly Planner Page -->
+      <section id="view-timetable" class="view hidden">
+        <div class="panel">
+          <h2>Weekly Timetable</h2>
+          <form id="event-form" class="row gap">
+            <input
+              type="text"
+              id="event-title"
+              placeholder="Event title..."
+              required
+            />
+            <select id="event-day">
+              <option value="0">Sun</option>
+              <option value="1">Mon</option>
+              <option value="2">Tue</option>
+              <option value="3">Wed</option>
+              <option value="4">Thu</option>
+              <option value="5">Fri</option>
+              <option value="6">Sat</option>
+            </select>
+            <input type="time" id="event-time" />
+            <select id="event-link">
+              <option value="">Link to task (optional)</option>
+            </select>
+            <button type="submit" class="btn primary">Add</button>
+          </form>
+
+          <div id="timetable" class="timetable"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <small>Made with love</small>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      }
+    </script>
+    <aside id="toast" class="toast hidden"></aside>
+  </body>
+</html>

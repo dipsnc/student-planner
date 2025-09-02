@@ -1,0 +1,11 @@
+{
+  "name": "Student Planner",
+  "short_name": "Planner",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#ff85ba",
+  "icons": []
+}
+
+
