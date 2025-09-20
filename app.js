@@ -31,8 +31,8 @@ function setActiveRoute(hash) {
 }
 
 window.addEventListener('hashchange', () => setActiveRoute(location.hash));
-window.addEventListener('DOMContentLoaded', () => {
-  initApp();
+window.addEventListener('DOMContentLoaded', async () => {
+  await initApp();
   setActiveRoute(location.hash || '#home');
   // wire navbar buttons to update the hash route
   document.querySelectorAll('.nav-link').forEach(btn => {
@@ -113,6 +113,7 @@ async function http(path, opts={}) {
     headers: { 'Content-Type': 'application/json' },
     ...opts
   });
+  if (res.status === 401) return { __unauthorized: true };
   if (!res.ok) throw new Error(await res.text());
   const ct = res.headers.get('content-type') || '';
   return ct.includes('application/json') ? res.json() : res.text();
@@ -127,6 +128,7 @@ const Api = {
 
   async listTodos() {
     const data = await http('/api/todos');
+    if (data && data.__unauthorized) return [];
     AppState.todos = data;
     return data;
   },
@@ -148,6 +150,7 @@ const Api = {
 
   async listEvents() {
     const data = await http('/api/events');
+    if (data && data.__unauthorized) return [];
     AppState.events = data;
     return data;
   },
@@ -164,6 +167,7 @@ const Api = {
 
   async listSessions() {
     const data = await http('/api/sessions');
+    if (data && data.__unauthorized) return [];
     AppState.sessions = data;
     return data;
   },
@@ -424,12 +428,12 @@ function initTimetable() {
 }
 
 async function initApp() {
+  await initAuth();
   initTodos();
   initPomodoro();
   initTimetable();
-  await loadTodos();
-  renderTimetable(await Api.listEvents());
-  await initAuth();
+  try { await loadTodos(); } catch {}
+  try { renderTimetable(await Api.listEvents()); } catch { renderTimetable([]); }
   initHome();
   updateAuthUI();
 }

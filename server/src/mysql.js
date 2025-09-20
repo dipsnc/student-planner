@@ -77,6 +77,12 @@ export async function findUserByEmail(email) {
   return rows[0] || null;
 }
 
+export async function getUserById(id) {
+  const db = await getPool();
+  const [rows] = await db.query('SELECT id, name, email FROM users WHERE id = :id', { id });
+  return rows[0] || null;
+}
+
 export async function createUser({ name, email, password_hash }) {
   const db = await getPool();
   const [res] = await db.query(

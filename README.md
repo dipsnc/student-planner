@@ -15,14 +15,7 @@ This project is a simple student planner SPA with a Node.js + Express + MySQL ba
    - `npm --prefix server start`
    - Open http://localhost:3000
 
-### Option B: Run with Docker (MySQL in container)
-1. Install Docker Desktop and start it.
-2. `docker compose up -d`
-3. Copy `server/.env.example` to `server/.env` (defaults match compose).
-4. `npm --prefix server install` and `npm --prefix server start`
-5. Open http://localhost:3000
-
-The server auto-creates the database (if missing) and required tables on first start.
+The server auto-creates the database (if missing) and required tables on first run.
 
 ## API Overview
 - Auth: `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`

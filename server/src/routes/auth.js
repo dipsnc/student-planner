@@ -9,8 +9,14 @@ const router = Router();
 router.get('/me', async (req, res) => {
   const s = getSession(req);
   if (!s) return res.json({ user: null });
-  // We only store userId in server memory; for client we return minimal info
-  return res.json({ user: { id: s.userId } });
+  try {
+    const { getUserById } = await import('../mysql.js');
+    const user = await getUserById(s.userId);
+    if (!user) return res.json({ user: null });
+    return res.json({ user });
+  } catch (e) {
+    return res.json({ user: { id: s.userId } });
+  }
 });
 
 router.post(
