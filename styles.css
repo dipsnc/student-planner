@@ -316,60 +316,29 @@ select {
   font-size: 1rem;
 }
 
-/* Hero redesign */
+/* Hero improvements */
 .hero {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
-  padding: 80px 24px;
-  min-height: 70vh;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(255, 207, 129, 0.25), rgba(255, 133, 186, 0.22));
-}
-.hero::before,
-.hero::after {
-  content: '';
-  position: absolute;
-  width: 480px;
-  height: 480px;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.45;
-  z-index: 0;
-}
-.hero::before {
-  top: -120px;
-  left: -120px;
-  background: radial-gradient(closest-side, rgba(255,133,186,0.65), rgba(255,133,186,0) 70%);
-  animation: floaty 20s ease-in-out infinite;
-}
-.hero::after {
-  bottom: -140px;
-  right: -140px;
-  background: radial-gradient(closest-side, rgba(255,207,129,0.65), rgba(255,207,129,0) 70%);
-  animation: floaty 24s ease-in-out infinite reverse;
-}
-@keyframes floaty {
-  0% { transform: translate3d(0,0,0) scale(1); }
-  50% { transform: translate3d(10px,-14px,0) scale(1.05); }
-  100% { transform: translate3d(0,0,0) scale(1); }
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
   width: 100%;
-  max-width: 1000px;
+  text-align: center;
   margin: 0 auto;
 }
 
 .hero-title {
-  font-size: clamp(3rem, 7vw, 5.5rem);
-  line-height: 1.06;
-  margin: 0 0 10px;
-  letter-spacing: -0.5px;
+  font-size: clamp(4rem, 10vw, 8rem);
+  line-height: 1.05;
+  margin: 0 0 6px;
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   background-clip: text;
@@ -378,60 +347,36 @@ select {
 }
 
 .hero-content p {
-  max-width: 820px;
-  margin: 0 auto 18px;
+  max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
-  font-size: 1.125rem;
-  color: var(--muted);
+  font-size: 1.2rem;
 }
 
 .hero-actions {
-  display: flex;
   justify-content: center;
-  gap: 12px;
   width: 100%;
-  margin-top: 8px;
 }
 .hero-actions .btn {
-  padding: 14px 20px;
+  padding: 14px 18px;
   font-size: 1.05rem;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
-}
-.hero-actions .btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.12);
 }
 .hero-cards {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  margin: 18px auto 0;
+  margin: 12px auto 0;
   width: 100%;
   max-width: 1000px;
 }
 .hero-card {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.8);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 16px;
-  max-width: 320px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hero-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+  padding: 14px;
+  max-width: 300px;
 }
 @media (max-width: 900px) {
-  .hero {
-    padding: 56px 16px;
-    min-height: 60vh;
-    border-radius: 0;
-  }
   .hero-cards {
     grid-template-columns: 1fr;
   }
