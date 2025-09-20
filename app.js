@@ -104,49 +104,72 @@ function scheduleLocalReminder(task) {
   }, Math.min(delay, 2_147_000_000)); // clamp to ~24 days
 }
 
-// API Hooks (placeholder to replace with Spring Boot calls)
+// API Hooks (replaced to call Node/Express backend)
+const AppState = { todos: [], events: [], sessions: [] };
+const API_BASE = '';
+async function http(path, opts={}) {
+  const res = await fetch(API_BASE + path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
 const Api = {
-  async listTodos() { return Storage.get('todos', []); },
+  // Auth helpers used in initAuth
+  async me() { return http('/api/auth/me'); },
+  async signup(payload) { return http('/api/auth/signup', { method: 'POST', body: JSON.stringify(payload) }); },
+  async login(payload) { return http('/api/auth/login', { method: 'POST', body: JSON.stringify(payload) }); },
+  async logout() { return http('/api/auth/logout', { method: 'POST' }); },
+
+  async listTodos() {
+    const data = await http('/api/todos');
+    AppState.todos = data;
+    return data;
+  },
   async createTodo(payload) {
-    const todos = Storage.get('todos', []);
-    todos.push(payload);
-    Storage.set('todos', todos);
-    return payload;
+    const data = await http('/api/todos', { method: 'POST', body: JSON.stringify(payload) });
+    AppState.todos.push(data);
+    return data;
   },
   async updateTodo(id, updates) {
-    const todos = Storage.get('todos', []);
-    const i = todos.findIndex(t => t.id === id);
-    if (i >= 0) {
-      todos[i] = { ...todos[i], ...updates };
-      Storage.set('todos', todos);
-      return todos[i];
-    }
+    const data = await http(`/api/todos/${id}`, { method: 'PATCH', body: JSON.stringify(updates) });
+    const i = AppState.todos.findIndex(t => t.id === id);
+    if (i >= 0) AppState.todos[i] = { ...AppState.todos[i], ...updates };
+    return data;
   },
   async deleteTodo(id) {
-    let todos = Storage.get('todos', []);
-    todos = todos.filter(t => t.id !== id);
-    Storage.set('todos', todos);
+    await http(`/api/todos/${id}`, { method: 'DELETE' });
+    AppState.todos = AppState.todos.filter(t => t.id !== id);
   },
 
-  async listEvents() { return Storage.get('events', []); },
+  async listEvents() {
+    const data = await http('/api/events');
+    AppState.events = data;
+    return data;
+  },
   async upsertEvent(payload) {
-    const events = Storage.get('events', []);
-    const i = events.findIndex(e => e.id === payload.id);
-    if (i >= 0) events[i] = payload; else events.push(payload);
-    Storage.set('events', events);
-    return payload;
+    const data = await http('/api/events/upsert', { method: 'POST', body: JSON.stringify(payload) });
+    const i = AppState.events.findIndex(e => e.id === payload.id);
+    if (i >= 0) AppState.events[i] = data; else AppState.events.push(data);
+    return data;
   },
   async deleteEvent(id) {
-    let events = Storage.get('events', []);
-    events = events.filter(e => e.id !== id);
-    Storage.set('events', events);
+    await http(`/api/events/${id}`, { method: 'DELETE' });
+    AppState.events = AppState.events.filter(e => e.id !== id);
   },
 
-  async listSessions() { return Storage.get('sessions', []); },
+  async listSessions() {
+    const data = await http('/api/sessions');
+    AppState.sessions = data;
+    return data;
+  },
   async addSession(session) {
-    const sessions = Storage.get('sessions', []);
-    sessions.push(session);
-    Storage.set('sessions', sessions);
+    const data = await http('/api/sessions', { method: 'POST', body: JSON.stringify(session) });
+    AppState.sessions.push(data);
   }
 };
 
@@ -334,12 +357,11 @@ function renderTimetable(events) {
     col.addEventListener('drop', async e=>{
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain');
-      const all = Storage.get('events', []);
-      const ev = all.find(x=>x.id===id);
+const ev = AppState.events.find(x=>x.id===id);
       if (!ev) return;
       ev.day = d;
       await Api.upsertEvent(ev);
-      renderTimetable(Storage.get('events', []));
+      renderTimetable(AppState.events);
     });
 
     const dayEvents = events.filter(e=>e.day===d).sort((a,b)=> (a.time||'').localeCompare(b.time||''));
@@ -351,7 +373,7 @@ function renderTimetable(events) {
       card.addEventListener('dragstart', e=>{
         e.dataTransfer.setData('text/plain', ev.id);
       });
-      const link = ev.linkTaskId ? (Storage.get('todos', []).find(t=>t.id===ev.linkTaskId)?.title || '') : '';
+const link = ev.linkTaskId ? (AppState.todos.find(t=>t.id===ev.linkTaskId)?.title || '') : '';
       card.innerHTML = `
         <div class="event-title">${ev.title}</div>
         <div class="event-meta"><span>${ev.time||''}</span>${link?`<span>• ${link}</span>`:''}</div>
@@ -407,28 +429,26 @@ async function initApp() {
   initTimetable();
   await loadTodos();
   renderTimetable(await Api.listEvents());
-  initAuth();
+  await initAuth();
   initHome();
   updateAuthUI();
 }
 
-// Mock Auth
-function initAuth() {
-  const key = 'mockUsers';
-  const users = Storage.get(key, []);
-  if (!Array.isArray(users)) Storage.set(key, []);
-
-  function setLoggedIn(name) {
-    Storage.set('currentUser', { name });
-    updateAuthUI();
-    Toast.show(`Welcome, ${name}`);
-  }
-
+// Auth wired to backend
+async function initAuth() {
   const navAuth = document.getElementById('nav-auth');
-  const current = Storage.get('currentUser', null);
-  if (current) {
+
+  async function refreshMe() {
+    try {
+      const { user } = await Api.me();
+      if (user) Storage.set('currentUser', user); else Storage.set('currentUser', null);
+    } catch { Storage.set('currentUser', null); }
+  }
+  await refreshMe();
+
+  if (Storage.get('currentUser', null)) {
     navAuth.textContent = 'Logout';
-    navAuth.onclick = () => { Storage.set('currentUser', null); updateAuthUI(); location.hash = '#home'; };
+    navAuth.onclick = async () => { await Api.logout(); Storage.set('currentUser', null); updateAuthUI(); location.hash = '#home'; };
   }
 
   const loginForm = document.getElementById('form-login');
@@ -442,27 +462,31 @@ function initAuth() {
     });
   });
 
-  loginForm.addEventListener('submit', e => {
+  loginForm.addEventListener('submit', async e => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const pass = document.getElementById('login-password').value;
-    const users = Storage.get(key, []);
-    const found = users.find(u => u.email === email && u.password === pass);
-    if (found) { setLoggedIn(found.name || email); location.hash = '#todo'; }
-    else Toast.show('Invalid credentials (mock)');
+    const password = document.getElementById('login-password').value;
+    try {
+      const user = await Api.login({ email, password });
+      Storage.set('currentUser', { id: user.id, name: user.name, email: user.email });
+      updateAuthUI();
+      location.hash = '#todo';
+      Toast.show(`Welcome, ${user.name}`);
+    } catch (err) { Toast.show('Invalid credentials'); }
   });
 
-  signupForm.addEventListener('submit', e => {
+  signupForm.addEventListener('submit', async e => {
     e.preventDefault();
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim().toLowerCase();
     const password = document.getElementById('signup-password').value;
-    const users = Storage.get(key, []);
-    if (users.some(u=>u.email===email)) { Toast.show('Email already exists (mock)'); return; }
-    users.push({ name, email, password });
-    Storage.set(key, users);
-    setLoggedIn(name);
-    location.hash = '#todo';
+    try {
+      const user = await Api.signup({ name, email, password });
+      Storage.set('currentUser', { id: user.id, name: user.name, email: user.email });
+      updateAuthUI();
+      location.hash = '#todo';
+      Toast.show(`Welcome, ${user.name}`);
+    } catch (err) { Toast.show('Sign up failed'); }
   });
 }
 
@@ -486,7 +510,7 @@ function updateAuthUI() {
   if (navAuth) {
     if (logged) {
       navAuth.textContent = 'Logout';
-      navAuth.onclick = () => { Storage.set('currentUser', null); updateAuthUI(); location.hash = '#home'; };
+navAuth.onclick = async () => { await Api.logout(); Storage.set('currentUser', null); updateAuthUI(); location.hash = '#home'; };
     } else {
       navAuth.textContent = 'Login';
       navAuth.onclick = null;
