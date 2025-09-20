@@ -1,8 +1,22 @@
 import mysql from 'mysql2/promise';
 
 let pool;
+
+async function ensureDatabaseExists() {
+  const host = process.env.DB_HOST || '127.0.0.1';
+  const port = Number(process.env.DB_PORT || 3306);
+  const user = process.env.DB_USER || 'root';
+  const password = process.env.DB_PASSWORD || 'password';
+  const database = process.env.DB_NAME || 'student_planner';
+
+  const conn = await mysql.createConnection({ host, port, user, password, namedPlaceholders: true });
+  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${database}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  await conn.end();
+}
+
 export async function getPool() {
   if (!pool) {
+    await ensureDatabaseExists();
     pool = mysql.createPool({
       host: process.env.DB_HOST || '127.0.0.1',
       port: Number(process.env.DB_PORT || 3306),
