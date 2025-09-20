@@ -141,7 +141,6 @@ const Api = {
   },
   async createTodo(payload) {
     const data = await http('/api/todos', { method: 'POST', body: JSON.stringify(payload) });
-    AppState.todos.push(data);
     return data;
   },
   async updateTodo(id, updates) {
@@ -236,18 +235,25 @@ function uuid() { return Math.random().toString(36).slice(2) + Date.now().toStri
 
 function initTodos() {
   const form = document.getElementById('todo-form');
+  let submitting = false;
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (submitting) return;
+    submitting = true;
     const title = document.getElementById('todo-title').value.trim();
     const dueAt = document.getElementById('todo-due').value || null;
     const reminder = document.getElementById('todo-reminder').checked;
-    if (!title) return;
+    if (!title) { submitting = false; return; }
     const task = { id: uuid(), title, dueAt, reminder, done: false, createdAt: Date.now() };
-    await Api.createTodo(task);
-    scheduleLocalReminder(task);
-    form.reset();
-    await loadTodos();
-    Toast.show('Task added');
+    try {
+      await Api.createTodo(task);
+      scheduleLocalReminder(task);
+      form.reset();
+      await loadTodos();
+      Toast.show('Task added');
+    } finally {
+      submitting = false;
+    }
   });
 
   document.getElementById('todo-list').addEventListener('click', async e => {
@@ -336,6 +342,8 @@ function initPomodoro() {
   document.querySelectorAll('.chip').forEach(c=>{
     c.addEventListener('click', ()=> setSessionType(c.dataset.session));
   });
+  // Always default to Focus when visiting Pomodoro view
+  setSessionType('focus');
   document.getElementById('timer-start').addEventListener('click', ()=>{
     if (Pomodoro.timerId) return;
     Pomodoro.timerId = setInterval(tick, 1000);
