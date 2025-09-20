@@ -113,9 +113,16 @@ async function http(path, opts={}) {
     headers: { 'Content-Type': 'application/json' },
     ...opts
   });
-  if (res.status === 401) return { __unauthorized: true };
-  if (!res.ok) throw new Error(await res.text());
   const ct = res.headers.get('content-type') || '';
+  if (res.status === 401) return { __unauthorized: true };
+  if (!res.ok) {
+    if (ct.includes('application/json')) {
+      const body = await res.json().catch(() => ({}));
+      const msg = body.error || (Array.isArray(body.errors) && body.errors[0]?.msg) || 'Request failed';
+      throw new Error(msg);
+    }
+    throw new Error(await res.text());
+  }
   return ct.includes('application/json') ? res.json() : res.text();
 }
 
@@ -476,7 +483,7 @@ async function initAuth() {
       updateAuthUI();
       location.hash = '#todo';
       Toast.show(`Welcome, ${user.name}`);
-    } catch (err) { Toast.show('Invalid credentials'); }
+    } catch (err) { Toast.show(err.message || 'Login failed'); }
   });
 
   signupForm.addEventListener('submit', async e => {
@@ -490,7 +497,7 @@ async function initAuth() {
       updateAuthUI();
       location.hash = '#todo';
       Toast.show(`Welcome, ${user.name}`);
-    } catch (err) { Toast.show('Sign up failed'); }
+    } catch (err) { Toast.show(err.message || 'Sign up failed'); }
   });
 }
 

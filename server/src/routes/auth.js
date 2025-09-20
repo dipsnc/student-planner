@@ -21,23 +21,26 @@ router.get('/me', async (req, res) => {
 
 router.post(
   '/signup',
-  body('name').isString().isLength({ min: 1 }),
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
+  body('name').isString().isLength({ min: 1 }).withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    try {
+      const { name, email, password } = req.body;
+      const existing = await findUserByEmail(email);
+      if (existing) return res.status(400).json({ error: 'Email already exists' });
 
-    const { name, email, password } = req.body;
-    const existing = await findUserByEmail(email);
-    if (existing) return res.status(400).json({ error: 'Email already exists' });
+      const password_hash = await bcrypt.hash(password, 10);
+      const userId = await createUser({ name, email, password_hash });
 
-    const password_hash = await bcrypt.hash(password, 10);
-    const userId = await createUser({ name, email, password_hash });
-
-    const sid = createSession(userId);
-    res.cookie('sid', sid, { httpOnly: true, sameSite: 'lax' });
-    res.json({ id: userId, name, email });
+      const sid = createSession(userId);
+      res.cookie('sid', sid, { httpOnly: true, sameSite: 'lax' });
+      return res.status(201).json({ id: userId, name, email });
+    } catch (err) {
+      return res.status(500).json({ error: 'Signup failed' });
+    }
   }
 );
 
