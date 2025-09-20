@@ -66,11 +66,11 @@ body {
   display: flex;
   gap: 8px;
 }
-.nav-link {
-  border: none;
+  .nav-link {
+  border: 1px solid var(--border);
   padding: 10px 12px;
   border-radius: 10px;
-  background: transparent;
+  background: #fff;
   color: #222;
   cursor: pointer;
   font-weight: 600;
@@ -81,7 +81,9 @@ body {
   transform: translateY(-1px);
 }
 .nav-link.active {
-  background: rgba(0, 0, 0, 0.06);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: #222;
+  border-color: transparent;
 }
 
 #app {
@@ -366,8 +368,8 @@ select {
   max-width: 1000px;
 }
 .hero-card {
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px;
   max-width: 300px;

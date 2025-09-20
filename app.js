@@ -280,6 +280,8 @@ const Pomodoro = {
 };
 
 function setSessionType(type) {
+  // stop any running timer when switching type to avoid overlapping intervals
+  if (Pomodoro.timerId) { clearInterval(Pomodoro.timerId); Pomodoro.timerId = null; }
   Pomodoro.currentType = type;
   const minutes = type==='focus'?25:type==='short'?5:15;
   Pomodoro.remainingSec = minutes*60;

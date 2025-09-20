@@ -8,7 +8,17 @@ router.use(requireAuth);
 
 router.get('/', async (req, res) => {
   const db = await getPool();
-  const [rows] = await db.query('SELECT * FROM todos WHERE user_id = :uid', { uid: req.userId });
+  const [rows] = await db.query(
+    `SELECT 
+       id,
+       title,
+       due_at AS dueAt,
+       reminder,
+       done,
+       created_at AS createdAt
+     FROM todos WHERE user_id = :uid`,
+    { uid: req.userId }
+  );
   res.json(rows);
 });
 
@@ -35,7 +45,11 @@ router.patch('/:id', async (req, res) => {
   if (!fields.length) return res.status(400).json({ error: 'No updates' });
   const db = await getPool();
   await db.query(`UPDATE todos SET ${fields.join(', ')} WHERE id = :id AND user_id = :uid`, params);
-  res.json({ id, ...updates });
+  const [rows] = await db.query(
+    `SELECT id, title, due_at AS dueAt, reminder, done, created_at AS createdAt FROM todos WHERE id = :id AND user_id = :uid`,
+    { id, uid: req.userId }
+  );
+  res.json(rows[0] || { id, ...updates });
 });
 
 router.delete('/:id', async (req, res) => {
